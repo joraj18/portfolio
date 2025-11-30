@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Johith Raj | Backend & ML Developer</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#050505',
+                            card: '#0f0f0f',
+                            accent: '#10b981', /* Emerald Green (Backend/Terminal vibe) */
+                            secondary: '#8b5cf6', /* Violet (ML/AI vibe) */
+                            text: '#e2e8f0'
+                        }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 10s linear infinite',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base Styles */
+        body {
+            background-color: #050505;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+
+        /* --- GLITCH EFFECT CSS --- */
+        .glitch-wrapper { position: relative; display: inline-block; }
+        .glitch { position: relative; color: #fff; }
+        .glitch::before, .glitch::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .glitch::before { left: 2px; text-shadow: -1px 0 #10b981; clip: rect(24px, 550px, 90px, 0); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+        .glitch::after { left: -2px; text-shadow: -1px 0 #8b5cf6; clip: rect(85px, 550px, 140px, 0); animation: glitch-anim 2.5s infinite linear alternate-reverse; }
+        @keyframes glitch-anim { 0% { clip: rect(11px, 9999px, 89px, 0); } 20% { clip: rect(78px, 9999px, 10px, 0); } 40% { clip: rect(15px, 9999px, 66px, 0); } 60% { clip: rect(32px, 9999px, 98px, 0); } 80% { clip: rect(4px, 9999px, 23px, 0); } 100% { clip: rect(96px, 9999px, 54px, 0); } }
+        @keyframes glitch-anim-2 { 0% { clip: rect(65px, 9999px, 93px, 0); } 20% { clip: rect(2px, 9999px, 12px, 0); } 40% { clip: rect(44px, 9999px, 56px, 0); } 60% { clip: rect(18px, 9999px, 83px, 0); } 80% { clip: rect(76px, 9999px, 3px, 0); } 100% { clip: rect(52px, 9999px, 26px, 0); } }
+
+        /* --- 3D TILT CARD --- */
+        .tilt-card { transform-style: preserve-3d; transform: perspective(1000px); }
+        .tilt-content { transform: translateZ(20px); }
+
+        /* Cursor Glow */
+        #cursor-glow {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15), transparent 70%);
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #10b981, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Skill Bar Animation */
+        .skill-fill {
+            width: 0%;
+            transition: width 1.5s ease-out;
+            will-change: width;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        /* Terminal Typing Cursor */
+        .terminal-cursor::after { content: '▋'; animation: blink 1s step-start infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="selection:bg-brand-accent selection:text-black">
+
+    <!-- CANVAS BACKGROUND -->
+    <canvas id="bg-canvas" class="fixed inset-0 z-0 w-full h-full opacity-40 pointer-events-none"></canvas>
+
+    <!-- MOUSE GLOW -->
+    <div id="cursor-glow" class="hidden md:block"></div>
+
+    <!-- CREATIVE ELEMENT: HOLOGRAPHIC HUD GAUGE -->
+    <div class="fixed bottom-8 right-8 z-50 hidden md:block">
+        <div class="relative w-24 h-24 flex items-center justify-center">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-md rounded-full border border-white/5 shadow-[0_0_20px_rgba(16,185,129,0.15)]"></div>
+            <div class="absolute inset-[-4px] border border-transparent border-t-brand-secondary/60 border-b-brand-secondary/30 rounded-full animate-spin-slow"></div>
+            <svg class="absolute inset-0 w-full h-full -rotate-90 p-2" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="3" fill="none" class="text-white/5" />
+                <circle id="progress-ring" cx="50" cy="50" r="40" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round" class="text-brand-accent transition-all duration-100 ease-linear shadow-[0_0_10px_currentColor]" />
+            </svg>
+            <div class="relative flex flex-col items-center justify-center z-10">
+                <span class="text-[10px] text-brand-secondary font-mono tracking-widest mb-0.5">SYNC</span>
+                <span id="scroll-percent" class="text-xl font-bold text-white font-mono leading-none">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 backdrop-blur-lg bg-brand-dark/80 border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold font-mono text-brand-accent tracking-tighter hover:text-white transition duration-300">
+                <span class="text-white">./</span>johith_raj
+            </a>
+            <div class="hidden md:flex space-x-8 text-sm font-mono text-slate-400">
+                <a href="#about" class="hover:text-brand-accent transition hover:shadow-[0_0_10px_rgba(16,185,129,0.3)]">01. Skills</a>
+                <a href="#experience" class="hover:text-brand-accent transition hover:shadow-[0_0_10px_rgba(16,185,129,0.3)]">02. Experience</a>
+                <a href="#projects" class="hover:text-brand-accent transition hover:shadow-[0_0_10px_rgba(16,185,129,0.3)]">03. Projects</a>
+                <a href="#contact" class="hover:text-brand-accent transition hover:shadow-[0_0_10px_rgba(16,185,129,0.3)]">04. Contact</a>
+            </div>
+
+            <button id="menu-btn" class="md:hidden text-white hover:text-brand-accent transition">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-brand-dark border-b border-white/10 p-4 absolute w-full">
+            <a href="#about" class="block py-2 text-slate-300 hover:text-brand-accent">Skills</a>
+            <a href="#experience" class="block py-2 text-slate-300 hover:text-brand-accent">Experience</a>
+            <a href="#projects" class="block py-2 text-slate-300 hover:text-brand-accent">Projects</a>
+            <a href="#contact" class="block py-2 text-slate-300 hover:text-brand-accent">Contact</a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section id="home" class="relative z-10 min-h-screen flex items-center justify-center pt-20 overflow-hidden" data-status="> Authenticating User: Johith...">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+            <div class="order-2 md:order-1 relative">
+                <div class="absolute -inset-10 bg-brand-accent/5 blur-3xl rounded-full pointer-events-none"></div>
+
+                <div class="relative">
+                    <p class="text-brand-accent font-mono mb-4 tracking-wide">Hello World, I'm</p>
+
+                    <div class="glitch-wrapper mb-2">
+                        <h1 class="glitch text-5xl md:text-7xl font-bold tracking-tighter text-white" data-text="Johith Raj.">Johith Raj.</h1>
+                    </div>
+
+                    <h2 class="text-3xl md:text-5xl font-bold text-slate-400 mb-6 mt-2">
+                        Tech <span class="text-gradient">Enthusiast.</span>
+                    </h2>
+
+                    <div class="font-mono text-xl text-brand-secondary mb-8 h-8 flex items-center">
+                        <span class="text-brand-accent mr-2">$</span>
+                        <span id="typewriter-text"></span><span class="animate-pulse">_</span>
+                    </div>
+
+                    <p class="text-slate-400 max-w-lg mb-8 leading-relaxed text-lg border-l-2 border-brand-accent/30 pl-4">
+                        A Backend Developer & Machine Learning Enthusiast with strong problem-solving abilities. I specialize in optimizing DSA and building scalable, data-driven applications.
+                    </p>
+
+                    <div class="flex gap-4">
+                        <a href="https://github.com/joraj18" target="_blank" class="group relative px-6 py-3 bg-white/5 border border-white/10 rounded overflow-hidden transition-all hover:border-brand-accent">
+                            <div class="absolute inset-0 w-0 bg-brand-accent/10 transition-all duration-[250ms] ease-out group-hover:w-full"></div>
+                            <span class="relative flex items-center gap-2 text-white group-hover:text-brand-accent">
+                                <i data-lucide="github" size="20"></i> GitHub
+                            </span>
+                        </a>
+                        <a href="https://www.linkedin.com/in/johithraj" target="_blank" class="group relative px-6 py-3 bg-white/5 border border-white/10 rounded overflow-hidden transition-all hover:border-brand-accent">
+                            <div class="absolute inset-0 w-0 bg-brand-accent/10 transition-all duration-[250ms] ease-out group-hover:w-full"></div>
+                            <span class="relative flex items-center gap-2 text-white group-hover:text-brand-accent">
+                                <i data-lucide="linkedin" size="20"></i> LinkedIn
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3D CODE BLOCK -->
+            <div class="order-1 md:order-2 perspective-1000 flex justify-center tilt-card" id="hero-card">
+                <div class="relative bg-[#0f0f0f] p-6 rounded-xl border border-white/10 shadow-2xl backdrop-blur-md transform transition-transform duration-100 group hover:border-brand-accent/50 tilt-content w-full max-w-md">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                        </div>
+                        <span class="text-xs font-mono text-slate-500">LifeCycle.java</span>
+                    </div>
+
+                    <pre class="font-mono text-sm leading-relaxed overflow-x-auto">
+<span class="text-brand-secondary">public class</span> <span class="text-brand-accent">DailyRoutine</span> {
+    <span class="text-brand-secondary">public static void</span> <span class="text-brand-accent">main</span>(<span class="text-white">String[] args</span>) {
+        <span class="text-brand-secondary">while</span> (isAlive()) {
+            eat();
+            sleep();
+            code();
+        }
+    }
+}</pre>
+
+                    <div class="absolute -right-4 -bottom-4 bg-brand-accent/20 backdrop-blur-md border border-brand-accent/50 p-3 rounded-lg animate-pulse">
+                        <i data-lucide="coffee" class="text-brand-accent"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce hidden md:block opacity-50">
+            <span class="text-xs font-mono mb-2 block text-center text-brand-accent">SCROLL TO INIT</span>
+            <i data-lucide="chevron-down" class="text-brand-accent mx-auto"></i>
+        </div>
+    </section>
+
+    <!-- SKILLS SECTION -->
+    <section id="about" class="relative z-10 py-24 bg-brand-dark" data-status="> Analyzing Core Dumps...">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="flex items-center mb-16">
+                <span class="text-brand-accent font-mono text-xl mr-4">01.</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-white">Technical Arsenal</h2>
+                <div class="h-px bg-white/10 flex-grow ml-6"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-x-12 gap-y-10">
+                <!-- Skill 1 -->
+                <div>
+                    <div class="flex justify-between mb-2 font-mono text-sm">
+                        <span class="text-white">Data Structures & Algorithms</span>
+                        <span class="text-brand-accent">Strong</span>
+                    </div>
+                    <div class="w-full bg-white/5 rounded-full h-2 border border-white/10 overflow-hidden">
+                        <div class="skill-fill bg-brand-accent h-full shadow-[0_0_10px_#10b981]" data-width="95%"></div>
+                    </div>
+                </div>
+
+                <!-- Skill 2 -->
+                <div>
+                    <div class="flex justify-between mb-2 font-mono text-sm">
+                        <span class="text-white">Problem Solving</span>
+                        <span class="text-brand-secondary">Strong</span>
+                    </div>
+                    <div class="w-full bg-white/5 rounded-full h-2 border border-white/10 overflow-hidden">
+                        <div class="skill-fill bg-brand-secondary h-full shadow-[0_0_10px_#8b5cf6]" data-width="92%"></div>
+                    </div>
+                </div>
+
+                <!-- Skill 3 -->
+                <div>
+                    <div class="flex justify-between mb-2 font-mono text-sm">
+                        <span class="text-white">Backend (SpringBoot/Flask)</span>
+                        <span class="text-brand-accent">Proficient</span>
+                    </div>
+                    <div class="w-full bg-white/5 rounded-full h-2 border border-white/10 overflow-hidden">
+                        <div class="skill-fill bg-brand-accent h-full shadow-[0_0_10px_#10b981]" data-width="88%"></div>
+                    </div>
+                </div>
+
+                <!-- Skill 4 -->
+                <div>
+                    <div class="flex justify-between mb-2 font-mono text-sm">
+                        <span class="text-white">Machine Learning / AI</span>
+                        <span class="text-brand-secondary">Enthusiast</span>
+                    </div>
+                    <div class="w-full bg-white/5 rounded-full h-2 border border-white/10 overflow-hidden">
+                        <div class="skill-fill bg-brand-secondary h-full shadow-[0_0_10px_#8b5cf6]" data-width="85%"></div>
+                    </div>
+                </div>
+
+                <!-- Skill 5 -->
+                <div>
+                    <div class="flex justify-between mb-2 font-mono text-sm">
+                        <span class="text-white">Database Design</span>
+                        <span class="text-brand-accent">Proficient</span>
+                    </div>
+                    <div class="w-full bg-white/5 rounded-full h-2 border border-white/10 overflow-hidden">
+                        <div class="skill-fill bg-brand-accent h-full shadow-[0_0_10px_#10b981]" data-width="80%"></div>
+                    </div>
+                </div>
+
+                <!-- Skill 6 -->
+                <div>
+                    <div class="flex justify-between mb-2 font-mono text-sm">
+                        <span class="text-white">System Design & Architecture</span>
+                        <span class="text-brand-secondary">Intermediate</span>
+                    </div>
+                    <div class="w-full bg-white/5 rounded-full h-2 border border-white/10 overflow-hidden">
+                        <div class="skill-fill bg-brand-secondary h-full shadow-[0_0_10px_#8b5cf6]" data-width="75%"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience" class="relative z-10 py-24" data-status="> Fetching History...">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="flex items-center mb-16">
+                <span class="text-brand-accent font-mono text-xl mr-4">02.</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-white">Experience</h2>
+                <div class="h-px bg-white/10 flex-grow ml-6"></div>
+            </div>
+
+            <div class="relative border-l border-white/10 ml-6 space-y-16">
+                
+                <!-- COGNIZANT -->
+                <div class="relative pl-12 group">
+                    <div class="absolute -left-[7px] top-2 w-3.5 h-3.5 rounded-full bg-brand-dark border-2 border-brand-accent group-hover:bg-brand-accent transition-colors duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                    <h3 class="text-2xl font-bold text-white group-hover:text-brand-accent transition-colors">GenAI & Full Stack Intern</h3>
+                    <p class="text-brand-secondary font-mono mb-2">@ Cognizant (Onsite) | Chennai, India</p>
+                    <p class="text-xs text-slate-500 font-mono mb-6 uppercase tracking-wider">July 2024 - August 2024</p>
+                    <ul class="space-y-3 text-slate-400">
+                        <li class="flex items-start"><span class="text-brand-accent mr-3 mt-1">▹</span><span>Built a scalable health insurance portal integrating <strong>Generative AI</strong> and <strong>Machine Learning</strong> for predictive analysis.</span></li>
+                        <li class="flex items-start"><span class="text-brand-accent mr-3 mt-1">▹</span><span>Engineered a custom <strong>RAG model</strong> chatbot to deliver accurate responses, enhancing user self-service capabilities.</span></li>
+                        <li class="flex items-start"><span class="text-brand-accent mr-3 mt-1">▹</span><span>Developed and maintained the backend infrastructure using <strong>Python Flask</strong> and <strong>SQL Server</strong> within an Agile environment.</span></li>
+                    </ul>
+                </div>
+
+                <!-- LEADING CODERS FORUM -->
+                <div class="relative pl-12 group">
+                    <div class="absolute -left-[7px] top-2 w-3.5 h-3.5 rounded-full bg-brand-dark border-2 border-brand-secondary group-hover:bg-brand-secondary transition-colors duration-300 shadow-[0_0_10px_rgba(139,92,246,0.5)]"></div>
+                    <h3 class="text-2xl font-bold text-white group-hover:text-brand-secondary transition-colors">Community Lead</h3>
+                    <p class="text-brand-secondary font-mono mb-2">
+                        @ <a href="https://codersforum.netlify.app/" target="_blank" class="hover:underline hover:text-brand-accent">Leading Coders Forum</a>
+                    </p>
+                    <p class="text-xs text-slate-500 font-mono mb-6 uppercase tracking-wider">Tech Community</p>
+                    <ul class="space-y-3 text-slate-400">
+                        <li class="flex items-start"><span class="text-brand-secondary mr-3 mt-1">▹</span><span>Demonstrated leadership skills by managing events and fostering a collaborative tech community.</span></li>
+                        <li class="flex items-start"><span class="text-brand-secondary mr-3 mt-1">▹</span><span>Delivered tech talks and mentored peers in various technical domains.</span></li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="relative z-10 py-24 bg-brand-dark" data-status="> Compiling Projects...">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center mb-16">
+                <span class="text-brand-accent font-mono text-xl mr-4">03.</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-white">Featured Projects</h2>
+                <div class="h-px bg-white/10 flex-grow ml-6"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Project 1: QuickZLearns -->
+                <div class="tilt-card group h-full">
+                    <div class="tilt-content bg-[#0f0f0f] border border-white/5 rounded-xl overflow-hidden h-full flex flex-col hover:border-brand-accent/50 transition-colors duration-500">
+                        <a href="https://github.com/joraj18/quickZlearns" target="_blank" class="block h-48 bg-gray-900 relative overflow-hidden group cursor-pointer">
+                             <div class="absolute inset-0 bg-brand-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 mix-blend-overlay"></div>
+                             <div class="w-full h-full flex items-center justify-center bg-[#111] bg-opacity-50 group-hover:bg-opacity-40 transition-all">
+                                <i data-lucide="zap" class="relative z-20 text-brand-accent w-12 h-12"></i>
+                            </div>
+                        </a>
+
+                        <div class="p-8 flex flex-col flex-grow bg-[#0f0f0f]">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-2xl font-bold text-white group-hover:text-brand-accent transition-colors">
+                                    <a href="https://github.com/joraj18/quickZlearns" target="_blank">QuickZLearns</a>
+                                </h3>
+                                <div class="flex gap-4 text-slate-400"><a href="https://github.com/joraj18/quickZlearns" target="_blank" class="hover:text-brand-accent transition"><i data-lucide="github" size="20"></i></a></div>
+                            </div>
+                            <p class="text-slate-400 mb-6 text-sm leading-relaxed flex-grow">An interactive e-learning application designed for rapid knowledge acquisition and assessment.</p>
+                            <ul class="flex flex-wrap gap-3 text-xs font-mono text-brand-accent/80 mt-auto"><li>Full Stack</li><li>Web</li><li>Database</li></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2: Smart Insurance -->
+                <div class="tilt-card group h-full">
+                    <div class="tilt-content bg-[#0f0f0f] border border-white/5 rounded-xl overflow-hidden h-full flex flex-col hover:border-brand-accent/50 transition-colors duration-500 relative">
+                        <a href="https://github.com/joraj18/Smart-Insurance" target="_blank" class="block h-48 bg-gray-900 relative overflow-hidden group cursor-pointer">
+                            <div class="absolute inset-0 bg-brand-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 mix-blend-overlay"></div>
+                            <div class="w-full h-full flex items-center justify-center bg-[#111] bg-opacity-50 group-hover:bg-opacity-40 transition-all">
+                                <i data-lucide="shield-check" class="relative z-20 text-brand-accent w-12 h-12"></i>
+                            </div>
+                        </a>
+
+                        <div class="p-8 flex flex-col flex-grow relative z-20 bg-[#0f0f0f]">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-2xl font-bold text-white group-hover:text-brand-accent transition-colors">
+                                    <a href="https://github.com/joraj18/Smart-Insurance" target="_blank">Smart Insurance</a>
+                                </h3>
+                                <div class="flex gap-4 text-slate-400">
+                                    <a href="https://github.com/joraj18/Smart-Insurance" target="_blank" class="hover:text-brand-accent transition"><i data-lucide="github" size="20"></i></a>
+                                </div>
+                            </div>
+                            <p class="text-slate-400 mb-6 text-sm leading-relaxed flex-grow">A GenAI-powered health insurance portal featuring a RAG chatbot for predictive analysis and rapid user support.</p>
+                            <ul class="flex flex-wrap gap-3 text-xs font-mono text-brand-accent/80 mt-auto">
+                                <li>Python Flask</li><li>GenAI</li><li>SQL Server</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3: InstaChef -->
+                <div class="tilt-card group h-full">
+                    <div class="tilt-content bg-[#0f0f0f] border border-white/5 rounded-xl overflow-hidden h-full flex flex-col hover:border-brand-secondary/50 transition-colors duration-500">
+                        <a href="https://github.com/joraj18/InstaChef-SmartRecipeGenerator" target="_blank" class="block h-48 bg-gray-900 relative overflow-hidden group cursor-pointer">
+                             <div class="absolute inset-0 bg-brand-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 mix-blend-overlay"></div>
+                             <div class="w-full h-full flex items-center justify-center bg-[#111] bg-opacity-50 group-hover:bg-opacity-40 transition-all">
+                                <i data-lucide="chef-hat" class="relative z-20 text-brand-secondary w-12 h-12"></i>
+                            </div>
+                        </a>
+
+                        <div class="p-8 flex flex-col flex-grow bg-[#0f0f0f]">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-2xl font-bold text-white group-hover:text-brand-secondary transition-colors">
+                                    <a href="https://github.com/joraj18/InstaChef-SmartRecipeGenerator" target="_blank">InstaChef</a>
+                                </h3>
+                                <div class="flex gap-4 text-slate-400"><a href="https://github.com/joraj18/InstaChef-SmartRecipeGenerator" target="_blank" class="hover:text-brand-secondary transition"><i data-lucide="github" size="20"></i></a></div>
+                            </div>
+                            <p class="text-slate-400 mb-6 text-sm leading-relaxed flex-grow">Smart recipe generator that utilizes AI to suggest meals based on available ingredients, reducing food waste.</p>
+                            <ul class="flex flex-wrap gap-3 text-xs font-mono text-brand-secondary/80 mt-auto"><li>AI/ML</li><li>Python</li><li>Web</li></ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="relative z-10 py-32 text-center overflow-hidden" data-status="> Terminating Session...">
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-accent/5 to-transparent pointer-events-none"></div>
+
+        <div class="max-w-2xl mx-auto px-6 relative z-20">
+            <p class="text-brand-accent font-mono mb-4 text-lg">04. What's Next?</p>
+            <h2 class="text-5xl md:text-6xl font-bold text-white mb-8 tracking-tight">Let's Connect</h2>
+            <p class="text-slate-400 mb-12 text-lg leading-relaxed">
+                I'm actively looking for <strong>internship opportunities</strong> where I can apply my backend and ML skills to solve real-world problems.
+            </p>
+
+            <a href="mailto:johithraj18@gmail.com" class="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-mono text-brand-accent transition-all duration-200 bg-transparent border border-brand-accent rounded hover:bg-brand-accent/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent">
+                <span class="mr-2">Ping Me</span>
+                <i data-lucide="terminal" class="group-hover:translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-8 text-center text-slate-500 text-sm font-mono relative z-10 bg-[#050505]">
+        <div class="flex justify-center space-x-6 mb-4 md:hidden">
+            <a href="https://github.com/joraj18" target="_blank" class="text-slate-400 hover:text-brand-accent"><i data-lucide="github"></i></a>
+            <a href="https://www.linkedin.com/in/johithraj" target="_blank" class="text-slate-400 hover:text-brand-accent"><i data-lucide="linkedin"></i></a>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. Initialize Icons
+        lucide.createIcons();
+
+        // 2. PARTICLE NETWORK ANIMATION
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Wrap around screen instead of bouncing for a more fluid "data stream" feel
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.4)'; // Brand Accent Green
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        for (let i = 0; i < 60; i++) particles.push(new Particle());
+
+        let mouse = { x: null, y: null };
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+            const cursorGlow = document.getElementById('cursor-glow');
+            if (cursorGlow) {
+                cursorGlow.style.left = e.clientX + 'px';
+                cursorGlow.style.top = e.clientY + 'px';
+            }
+        });
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                for (let j = i; j < particles.length; j++) {
+                    let p2 = particles[j];
+                    let dist = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
+                    if (dist < 120) {
+                        // Dynamic connection color based on distance
+                        ctx.strokeStyle = `rgba(16, 185, 129, ${1 - dist/120})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+                // Mouse interaction
+                if (mouse.x != null) {
+                    let dist = Math.sqrt((p.x - mouse.x)**2 + (p.y - mouse.y)**2);
+                    if (dist < 180) {
+                        ctx.strokeStyle = `rgba(139, 92, 246, ${1 - dist/180})`; // Secondary Purple
+                        ctx.lineWidth = 0.8;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // 3. TILT EFFECT
+        document.querySelectorAll('.tilt-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                if (card.children[0]) {
+                    // Subtle tilt
+                    const rotateX = ((y - rect.height/2) / rect.height/2) * -8;
+                    const rotateY = ((x - rect.width/2) / rect.width/2) * 8;
+                    card.children[0].style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                }
+            });
+            card.addEventListener('mouseleave', () => {
+                if (card.children[0]) card.children[0].style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+            });
+        });
+
+        // 4. TYPEWRITER EFFECT
+        const textElement = document.getElementById("typewriter-text");
+        const phrases = ["Backend Developer.", "ML Enthusiast.", "Problem Solver.", "DSA Expert."];
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let typeTimer;
+
+        function typeWriter() {
+            const currentPhrase = phrases[phraseIndex];
+            
+            if (isDeleting) {
+                charIndex--;
+            } else {
+                charIndex++;
+            }
+
+            if (textElement) {
+                textElement.innerText = currentPhrase.substring(0, charIndex);
+            }
+
+            let typeSpeed = isDeleting ? 30 : 80; // Default typing speed
+
+            if (!isDeleting && charIndex === currentPhrase.length) {
+                // Finished typing word
+                typeSpeed = 1500; // Pause at end
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                // Finished deleting word
+                isDeleting = false;
+                phraseIndex = (phraseIndex + 1) % phrases.length;
+                typeSpeed = 300; // Pause before new word
+            }
+
+            typeTimer = setTimeout(typeWriter, typeSpeed);
+        }
+
+        typeWriter();
+
+        // 5. OBSERVERS & SCROLL
+        const sections = document.querySelectorAll("section");
+        const progressRing = document.getElementById('progress-ring');
+        const scrollPercentText = document.getElementById('scroll-percent');
+        const circumference = 251.2;
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollFraction = docHeight > 0 ? (scrollTop / docHeight) : 0;
+            
+            const offset = circumference - (scrollFraction * circumference);
+            if (progressRing) progressRing.style.strokeDashoffset = offset;
+            if (scrollPercentText) scrollPercentText.innerText = Math.min(100, Math.round(scrollFraction * 100)) + '%';
+        });
+
+        // Mobile Menu
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (menuBtn && mobileMenu) {
+            menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        }
+
+        // Section Reveal Observer
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-10');
+
+                    // Trigger skill bars
+                    if (entry.target.id === 'about') {
+                        document.querySelectorAll('.skill-fill').forEach(bar => {
+                            const targetWidth = bar.getAttribute('data-width') || '0%';
+                            requestAnimationFrame(() => {
+                                bar.style.width = targetWidth;
+                            });
+                        });
+                    }
+                }
+            });
+        }, { threshold: 0.2 });
+
+        sections.forEach(el => {
+            el.classList.add('transition-all', 'duration-1000', 'opacity-0', 'translate-y-10');
+            observer.observe(el);
+        });
+
+        // Initial Load Check
+        window.addEventListener('load', () => {
+            const aboutEl = document.getElementById('about');
+            if (aboutEl && aboutEl.getBoundingClientRect().top < window.innerHeight) {
+                 document.querySelectorAll('.skill-fill').forEach(bar => {
+                    const targetWidth = bar.getAttribute('data-width') || '0%';
+                    bar.style.width = targetWidth;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
